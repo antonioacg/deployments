@@ -1,18 +1,23 @@
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: pvc
   namespace: flux-system
 spec:
-  # interval: 5m
-  retryInterval: 1m
-  timeout: 5m
+  interval: 5m
   path: "./clusters/production/pvc"
   prune: true
+  sourceRef:
+    kind: GitRepository
+    name: deployments
+  targetNamespace: production
+  dependsOn:
+    - name: namespaces
+  timeout: 1m
   wait: true
-  # sourceRef:
-  #   kind: GitRepository
-  #   name: flux-system
-  # validation: client
-  # kustomize:
-  #   recurse: true  # Added to include subdirectories (e.g. apps, pvc)
+  force: true
+  healthChecks:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      name: stremio-pvc
+      namespace: production
