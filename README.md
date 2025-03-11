@@ -9,54 +9,95 @@ This guide explains a streamlined, GitOps-driven deployment using Flux in read-o
 - [Flux CLI](https://fluxcd.io/docs/installation/) installed.
 - Access to a Kubernetes cluster.
 - A GitHub token (`GITHUB_TOKEN`) with read access for your private repository.
+- [cert-manager](https://cert-manager.io/docs/installation/) installed in your cluster.
 
 ## Setup Instructions
 
-1. **Clone the Repository**
+1. **DNS Setup**
+
+   Ensure your domain (svr.aacg.dev) points to your cluster's ingress controller IP:
+   ```bash
+   # Get ingress IP
+   kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+   ```
+
+2. **Clone the Repository**
 
    Clone the repository using your GitHub credentials:
    ```bash
-   export GITHUB_USER=your_github_username
    export GITHUB_TOKEN=your_token_here
-   git clone https://$GITHUB_USER:$GITHUB_TOKEN@github.com/$GITHUB_USER/deployments.git
+   git clone https://antonioacg:$GITHUB_TOKEN@github.com/antonioacg/deployments.git
    cd deployments
    ```
 
-2. **Create Git Authentication Secret**
+3. **Configure Let's Encrypt Email**
+
+   Update the ClusterIssuer configuration with your email:
+   ```bash
+   # Edit clusters/production/cert-manager/letsencrypt-prod.yaml
+   # Replace 'your-email@example.com' with your actual email
+   ```
+
+4. **Create Git Authentication Secret**
 
    Create a Kubernetes secret in the `flux-system` namespace:
    ```bash
    kubectl create secret generic flux-git-deploy \
-     --from-literal=username=$GITHUB_USER \
+     --from-literal=username=antonioacg \
      --from-literal=password=$GITHUB_TOKEN \
      -n flux-system
    ```
 
-3. **Deploy with Flux**
+5. **Deploy with Flux**
 
    Install Flux and configure the Git source along with your production configuration:
    ```bash
    flux install
    flux create source git deployments \
-     --url=https://github.com/$GITHUB_USER/deployments.git \
-     --branch=main \
-     --interval=1m \
-     --secret-ref=flux-git-deploy
+  --url=https://antonioacg:$GITHUB_TOKEN@github.com/antonioacg/deployments \
+  --branch=main \
+  --secret-ref=flux-git-deploy
 
    flux create kustomization production \
      --source=deployments \
      --path="./clusters/production" \
      --prune=true \
-     --wait=true \
-     --interval=1m
+     --wait=false \
+     --timeout=5m \
+    --interval=1m
    ```
 
-4. **Verify the Deployment**
+6. **Verify the Deployment**
 
-   Check that all resources are running in the `production` namespace:
+   Check certificate issuance and ingress status:
    ```bash
-   kubectl get all -n production
+   # Check certificate status
+   kubectl get certificate -n production
+   kubectl get certificaterequest -n production
+   kubectl get challenge -n production
+
+   # Check ingress
+   kubectl get ingress -n production
+   
+   # Verify TLS certificate
+   curl -v https://svr.aacg.dev
    ```
+
+## Troubleshooting
+
+### Certificate Issues
+- Check cert-manager logs:
+  ```bash
+  kubectl logs -n cert-manager deploy/cert-manager
+  ```
+- Verify ClusterIssuer status:
+  ```bash
+  kubectl get clusterissuer letsencrypt-prod -o yaml
+  ```
+- Check challenge status:
+  ```bash
+  kubectl get challenges -n production
+  ```
 
 ## Folder Structure Overview
 

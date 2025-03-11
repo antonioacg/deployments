@@ -41,16 +41,43 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
+      name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stremio-nodeport
+  namespace: production
+spec:
+  type: NodePort
+  selector:
+    app: stremio
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30080
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: stremio-ingress
   namespace: production
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "64m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Allow HTTP for testing
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - svr.aacg.dev
+      secretName: svr-aacg-dev-tls
   rules:
-    - host: stremio.local
+    - host: svr.aacg.dev
       http:
         paths:
           - path: /
