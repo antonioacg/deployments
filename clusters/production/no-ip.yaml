@@ -1,0 +1,18 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: no-ip
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: "./clusters/production/no-ip"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: deployments
+  targetNamespace: no-ip
+  dependsOn:
+    - name: namespaces
+  timeout: 2m
+  wait: true
+  force: true

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stremio-server
+  namespace: production
+  labels:
+    app: stremio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stremio
+  template:
+    metadata:
+      labels:
+        app: stremio
+    spec:
+      containers:
+        - name: stremio
+          image: stremio/server:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: stremio-data
+              mountPath: /root/.stremio-server
+      volumes:
+        - name: stremio-data
+          persistentVolumeClaim:
+            claimName: stremio-pvc

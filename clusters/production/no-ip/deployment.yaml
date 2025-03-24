@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noip-duc
+  namespace: no-ip
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noip-duc
+  template:
+    metadata:
+      labels:
+        app: noip-duc
+    spec:
+      containers:
+      - name: noip-duc
+        image: ghcr.io/noipcom/noip-duc:latest
+        env:
+        - name: NOIP_IP_METHOD
+          value: http://ip1.dynupdate6.no-ip.com/,http://v6.ipv6-test.com/api/myip.php
+        - name: NOIP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: noip-credentials
+              key: username
+        - name: NOIP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: noip-credentials
+              key: password
+        - name: NOIP_HOSTNAMES
+          valueFrom:
+            configMapKeyRef:
+              name: noip-config
+              key: hostnames
+        - name: NOIP_CHECK_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: noip-config
+              key: interval
