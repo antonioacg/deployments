@@ -7,6 +7,8 @@ spec:
   containers:
   - name: debug
     image: nicolaka/netshoot
-    command: 
+    command:
       - sleep
       - "3600"
+    securityContext:
+      privileged: true  # Be careful with this in production
