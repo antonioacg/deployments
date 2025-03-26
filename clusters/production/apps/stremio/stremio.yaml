@@ -48,6 +48,10 @@ metadata:
   name: stremio-service
   namespace: production
 spec:
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
   selector:
     app: stremio
   ports:
@@ -62,6 +66,10 @@ metadata:
   name: stremio-nodeport
   namespace: production
 spec:
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
   type: NodePort
   selector:
     app: stremio
@@ -77,6 +85,8 @@ metadata:
   name: stremio-ingress
   namespace: production
   annotations:
+    nginx.ingress.kubernetes.io/enable-real-ip: "true"
+    nginx.ingress.kubernetes.io/proxy-real-ip-cidr: ::/0  # Enable IPv6 real IP
     nginx.ingress.kubernetes.io/proxy-body-size: "64m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"

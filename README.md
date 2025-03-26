@@ -54,9 +54,9 @@ This guide explains a streamlined, GitOps-driven deployment using Flux in read-o
    ```bash
    flux install
    flux create source git deployments \
-  --url=https://antonioacg:$GITHUB_TOKEN@github.com/antonioacg/deployments \
-  --branch=main \
-  --secret-ref=flux-git-deploy
+     --url=https://antonioacg:$GITHUB_TOKEN@github.com/antonioacg/deployments \
+     --branch=main \
+     --secret-ref=flux-git-deploy
 
    flux create kustomization production \
      --source=deployments \
@@ -64,7 +64,7 @@ This guide explains a streamlined, GitOps-driven deployment using Flux in read-o
      --prune=true \
      --wait=false \
      --timeout=5m \
-    --interval=1m
+     --interval=1m
    ```
 
 6. **Verify the Deployment**
