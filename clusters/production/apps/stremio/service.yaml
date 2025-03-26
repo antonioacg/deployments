@@ -4,6 +4,10 @@ metadata:
   name: stremio-service
   namespace: production
 spec:
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
   selector:
     app: stremio
   ports:
@@ -18,6 +22,10 @@ metadata:
   name: stremio-nodeport
   namespace: production
 spec:
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
   type: NodePort
   selector:
     app: stremio
