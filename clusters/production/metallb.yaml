@@ -1,18 +1,16 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: no-ip
+  name: metallb-config
   namespace: flux-system
 spec:
   interval: 5m
-  path: "./clusters/production/no-ip"
+  path: "./clusters/production/metallb"
   prune: true
   sourceRef:
     kind: GitRepository
     name: deployments
-  targetNamespace: no-ip
   dependsOn:
-    - name: nginx-ingress
+    - name: calico-config
   timeout: 2m
   wait: true
-  force: true

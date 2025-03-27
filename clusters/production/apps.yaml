@@ -12,7 +12,7 @@ spec:
     name: deployments
   targetNamespace: production
   dependsOn:
-    - name: namespaces
+    - name: nginx-ingress
     - name: cert-manager-config
   timeout: 2m
   wait: true

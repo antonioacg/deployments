@@ -11,6 +11,6 @@ spec:
     kind: GitRepository
     name: deployments
   dependsOn:
-    - name: namespaces
+    - name: metallb-config
   timeout: 2m
   wait: true
