@@ -13,7 +13,6 @@ spec:
   targetNamespace: production
   dependsOn:
     - name: nginx-ingress
-    - name: cert-manager-config
   timeout: 2m
   wait: true
   force: true

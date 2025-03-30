@@ -14,10 +14,5 @@ spec:
         name: ingress-nginx
         namespace: flux-system
   values:
-    controller:
-      config:
-        enable-ipv6: "true"
-      extraArgs:
-        enable-ssl-passthrough: ""
     admissionWebhooks:
       enabled: true
