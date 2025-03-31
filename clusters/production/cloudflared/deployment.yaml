@@ -14,6 +14,9 @@ spec:
         app: cloudflared
     spec:
       containers:
+      - name: debug
+        image: busybox
+        command: ["sleep", "3600"]
       - name: cloudflared
         image: cloudflare/cloudflared:latest
         args:

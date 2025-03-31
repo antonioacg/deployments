@@ -19,7 +19,7 @@ spec:
         - name: stremio
           image: stremio/server:latest
           ports:
-            - containerPort: 80
+            - containerPort: 11470
           volumeMounts:
             - name: stremio-data
               mountPath: /root/.stremio-server
