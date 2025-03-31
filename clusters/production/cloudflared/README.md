@@ -34,7 +34,7 @@ ingress:
 2. All traffic is forwarded to nginx-ingress controller
 3. Nginx-ingress routes traffic based on Host header to appropriate services
 4. Current routes:
-   - svr.aac.gd, svr.aacg.dev → stremio-service.production:80
+   - stremio.aac.gd, stremio.aacg.dev → stremio-service.production:80
 
 ## Troubleshooting
 
@@ -60,10 +60,10 @@ kubectl exec -n cloudflared deploy/cloudflared -- curl http://localhost:2000/met
 4. Test nginx-ingress connectivity:
 ```bash
 # Test primary domain
-kubectl exec -n cloudflared deploy/cloudflared -- curl -v -H "Host: svr.aac.gd" http://ingress-nginx-controller.ingress-nginx.svc.cluster.local
+kubectl exec -n cloudflared deploy/cloudflared -- curl -v -H "Host: stremio.aac.gd" http://ingress-nginx-controller.ingress-nginx.svc.cluster.local
 
 # Test secondary domain
-kubectl exec -n cloudflared deploy/cloudflared -- curl -v -H "Host: svr.aacg.dev" http://ingress-nginx-controller.ingress-nginx.svc.cluster.local
+kubectl exec -n cloudflared deploy/cloudflared -- curl -v -H "Host: stremio.aacg.dev" http://ingress-nginx-controller.ingress-nginx.svc.cluster.local
 ```
 
 5. Verify tunnel configuration:
