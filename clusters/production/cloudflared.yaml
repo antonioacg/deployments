@@ -1,0 +1,17 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cloudflared
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: "./clusters/production/cloudflared"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: deployments
+  targetNamespace: cloudflared
+  dependsOn:
+    - name: namespaces
+  timeout: 2m
+  wait: true

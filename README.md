@@ -1,58 +1,41 @@
 # Deployments Setup on Ubuntu Server
 
-This guide explains a streamlined, GitOps-driven deployment using Flux in read-only mode for a private repository. The configuration ensures that the "production" namespace, persistent storage, and application resources are deployed in the correct sequence.
+This guide explains a streamlined, GitOps-driven deployment using Flux in read-only mode for managing a Kubernetes cluster through Git.
 
 ## Prerequisites
 
-- An Ubuntu server with Git installed.
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed and configured.
-- [Flux CLI](https://fluxcd.io/docs/installation/) installed.
-- Access to a Kubernetes cluster.
-- A GitHub token (`GITHUB_TOKEN`) with read access for your private repository.
-- [cert-manager](https://cert-manager.io/docs/installation/) installed in your cluster.
+1. An Ubuntu server with Git installed
+2. Access to a Kubernetes cluster 
+3. A GitHub token (`GITHUB_TOKEN`) with read access for your private repository
+
+### Install kubectl
+```bash
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+### Install Flux CLI
+```bash
+curl -s https://fluxcd.io/install.sh | sudo bash
+```
 
 ## Setup Instructions
 
-1. **DNS Setup**
-
-   Ensure your domain (svr.aacg.dev) points to your cluster's ingress controller IP:
-   ```bash
-   # Get ingress IP
-   kubectl get service -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
-   ```
-
-2. **Clone the Repository**
-
-   Clone the repository using your GitHub credentials:
-   ```bash
-   export GITHUB_TOKEN=your_token_here
-   git clone https://antonioacg:$GITHUB_TOKEN@github.com/antonioacg/deployments.git
-   cd deployments
-   ```
-
-3. **Configure Let's Encrypt Email**
-
-   Update the ClusterIssuer configuration with your email:
-   ```bash
-   # Edit clusters/production/cert-manager/letsencrypt-prod.yaml
-   # Replace 'your-email@example.com' with your actual email
-   ```
-
-4. **Create Git Authentication Secret**
-
-   Create a Kubernetes secret in the `flux-system` namespace:
-   ```bash
-   kubectl create secret generic flux-git-deploy \
-     --from-literal=username=antonioacg \
-     --from-literal=password=$GITHUB_TOKEN \
-     -n flux-system
-   ```
-
-5. **Deploy with Flux**
-
-   Install Flux and configure the Git source along with your production configuration:
+1. **Install Flux**
    ```bash
    flux install
+   ```
+
+2. **Create Git Repository Secret**
+   ```bash
+   kubectl create secret generic flux-git-deploy \
+     --namespace=flux-system \
+     --from-literal=username=antonioacg \
+     --from-literal=password=$GITHUB_TOKEN
+   ```
+
+3. **Configure Flux with Git Source**
+   ```bash
    flux create source git deployments \
      --url=https://antonioacg:$GITHUB_TOKEN@github.com/antonioacg/deployments \
      --branch=main \
@@ -67,42 +50,45 @@ This guide explains a streamlined, GitOps-driven deployment using Flux in read-o
      --interval=1m
    ```
 
-6. **Verify the Deployment**
+## Infrastructure Overview
 
-   Check certificate issuance and ingress status:
-   ```bash
-   # Check certificate status
-   kubectl get certificate -n production
-   kubectl get certificaterequest -n production
-   kubectl get challenge -n production
+- **Traffic Flow**:
+  1. Internet → Cloudflare
+  2. Cloudflare → Cloudflared Tunnel
+  3. Cloudflared → Nginx Ingress
+  4. Nginx Ingress → Services
 
-   # Check ingress
-   kubectl get ingress -n production
-   
-   # Verify TLS certificate
-   curl -v https://svr.aacg.dev
-   ```
+- **Key Components**:
+  - Cloudflared: Manages secure tunnel to Cloudflare
+  - Nginx Ingress: Internal traffic routing
+  - Flux: GitOps deployment management
+
+## Folder Structure
+
+- **namespaces/**: Namespace definitions
+- **clusters/production/**:
+  - **nginx-ingress/**: Ingress controller and routes
+  - **cloudflared/**: Cloudflare tunnel configuration
+  - **apps/**: Application deployments
+  - **pvc/**: Persistent volume claims
 
 ## Troubleshooting
 
-### Certificate Issues
-- Check cert-manager logs:
-  ```bash
-  kubectl logs -n cert-manager deploy/cert-manager
-  ```
-- Verify ClusterIssuer status:
-  ```bash
-  kubectl get clusterissuer letsencrypt-prod -o yaml
-  ```
-- Check challenge status:
-  ```bash
-  kubectl get challenges -n production
-  ```
+1. **Check Flux Status**:
+   ```bash
+   flux get all
+   ```
 
-## Folder Structure Overview
+2. **Check Pod Status**:
+   ```bash
+   kubectl get pods -A
+   ```
 
-- **namespaces/production.yaml:** Defines the production namespace and its kustomization is in `namespaces/kustomization.yaml`.
-- **clusters/production/pvc/stremio-pvc.yaml:** PersistentVolumeClaim for Stremio.
-- **clusters/production/apps/stremio.yaml:** Deployment and Service for Stremio.
-- **clusters/production/pvc.yaml & apps.yaml:** Flux kustomizations for PVC and Apps (with dependencies).
-- **clusters/production/kustomization.yaml:** Aggregates the PVC and Apps kustomizations.
+3. **View Component Logs**:
+   ```bash
+   # Cloudflared logs
+   kubectl logs -n cloudflared -l app=cloudflared
+
+   # Nginx ingress logs
+   kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
+   ```
