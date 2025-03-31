@@ -21,3 +21,13 @@ spec:
                 name: stremio-service
                 port:
                   number: 80
+    - host: svr.aac.gd
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stremio-service
+                port:
+                  number: 80
