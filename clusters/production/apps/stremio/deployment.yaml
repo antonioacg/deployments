@@ -20,6 +20,14 @@ spec:
           image: stremio/server:latest
           ports:
             - containerPort: 11470
+              name: http
+              protocol: TCP
+            - containerPort: 12470
+              name: https
+              protocol: TCP
+          env:
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
           volumeMounts:
             - name: stremio-data
               mountPath: /root/.stremio-server

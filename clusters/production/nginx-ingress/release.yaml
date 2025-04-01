@@ -1,3 +1,4 @@
+---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
@@ -16,3 +17,26 @@ spec:
   values:
     admissionWebhooks:
       enabled: true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: update-nginx-admission-ca
+  namespace: ingress-nginx
+  annotations:
+    helm.toolkit.fluxcd.io/hook: post-sync
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: update-ca
+          image: bitnami/kubectl:latest
+          command:
+            - sh
+            - -c
+            - |
+              CA_BUNDLE=$(kubectl get secret ingress-nginx-admission -n ingress-nginx -o jsonpath='{.data.ca}' | base64 --decode | base64)
+              kubectl patch validatingwebhookconfiguration ingress-nginx-admission \
+                --type=merge \
+                -p "{\"webhooks\":[{\"name\":\"validate.nginx.ingress.kubernetes.io\",\"clientConfig\":{\"caBundle\":\"${CA_BUNDLE}\"}}]}"

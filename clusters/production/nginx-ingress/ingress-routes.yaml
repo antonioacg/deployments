@@ -20,7 +20,7 @@ spec:
               service:
                 name: stremio-service
                 port:
-                  number: 443
+                  number: 80
     - host: stremio.aac.gd
       http:
         paths:
@@ -30,4 +30,4 @@ spec:
               service:
                 name: stremio-service
                 port:
-                  number: 443
+                  number: 80
