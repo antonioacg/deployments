@@ -11,18 +11,7 @@ spec:
       port: 80
       targetPort: 11470
       name: http
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: stremio-nodeport
-  namespace: production
-spec:
-  type: NodePort
-  selector:
-    app: stremio
-  ports:
     - protocol: TCP
-      port: 80
-      targetPort: 11470
-      nodePort: 30080
+      port: 443
+      targetPort: 12470
+      name: https
