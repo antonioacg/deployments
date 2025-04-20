@@ -12,7 +12,7 @@ spec:
     name: deployments
   targetNamespace: production
   dependsOn:
-    - name: nginx-ingress
+    - name: namespaces
   timeout: 2m
   wait: true
   force: true
