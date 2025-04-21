@@ -8,47 +8,43 @@ This guide explains a streamlined, GitOps-driven deployment using Flux in read-o
 2. Access to a Kubernetes cluster 
 3. A GitHub token (`GITHUB_TOKEN`) with read access for your private repository
 
-### Install kubectl
+## Installation
+
+1. **Set Required Environment Variables**:
+   ```bash
+   export GITHUB_TOKEN="your-github-token"
+   export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
+   ```
+
+2. **Install SOPS and Age**:
+   ```bash
+   ./install-sops-age.sh
+   ```
+
+3. **Install Flux and Configure Cluster**:
+   ```bash
+   ./install.sh
+   ```
+
+4. **Verify the Installation**:
+   ```bash
+   flux get all --all-namespaces
+   ```
+
+## Retrieving Your Public Key
+
+After installing SOPS and Age, your public key is stored in the keys file. To extract it:
+
 ```bash
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+grep '^# public key:' $SOPS_AGE_KEY_FILE | cut -d' ' -f4
 ```
 
-### Install Flux CLI
-```bash
-curl -s https://fluxcd.io/install.sh | sudo bash
-```
+Use this public key (starts with `age1...`) when encrypting your secrets.
 
-## Setup Instructions
-
-1. **Install Flux**
-   ```bash
-   flux install
-   ```
-
-2. **Create Git Repository Secret**
-   ```bash
-   kubectl create secret generic flux-git-deploy \
-     --namespace=flux-system \
-     --from-literal=username=antonioacg \
-     --from-literal=password=$GITHUB_TOKEN
-   ```
-
-3. **Configure Flux with Git Source**
-   ```bash
-   flux create source git deployments \
-     --url=https://antonioacg:$GITHUB_TOKEN@github.com/antonioacg/deployments \
-     --branch=main \
-     --secret-ref=flux-git-deploy
-
-   flux create kustomization production \
-     --source=deployments \
-     --path="./clusters/production" \
-     --prune=true \
-     --wait=false \
-     --timeout=5m \
-     --interval=1m
-   ```
+> **Important**: 
+> - Never commit your private key file to Git
+> - Back up your `keys.txt` file securely
+> - The key file is located at `~/.config/sops/age/keys.txt`
 
 ## Infrastructure Overview
 
@@ -62,6 +58,8 @@ curl -s https://fluxcd.io/install.sh | sudo bash
   - Cloudflared: Manages secure tunnel to Cloudflare
   - Nginx Ingress: Internal traffic routing
   - Flux: GitOps deployment management
+  - SOPS: Secret encryption
+  - Age: Encryption key management
 
 ## Folder Structure
 
@@ -91,4 +89,16 @@ curl -s https://fluxcd.io/install.sh | sudo bash
 
    # Nginx ingress logs
    kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
+   ```
+
+4. **Verify SOPS/Age Setup**:
+   ```bash
+   # Check SOPS version
+   sops --version
+
+   # Verify Age key file
+   ls -l $SOPS_AGE_KEY_FILE
+
+   # Test SOPS encryption
+   echo "secret: test" | sops --encrypt --age $(grep "^# public key:" $SOPS_AGE_KEY_FILE | cut -d' ' -f4) /dev/stdin
    ```
