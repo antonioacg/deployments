@@ -6,17 +6,6 @@
 2. Copy the tunnel token from the dashboard
 3. Configure the DNS records in Cloudflare to point to your tunnel
 
-## Installation
-
-1. Create the credentials secret using your tunnel token:
-```bash
-kubectl create secret generic cloudflared-credentials \
-  --from-literal=token="eyJhI...long-token-string...dSayJ9" \
-  -n cloudflared
-```
-
-Note: The token value should be the raw token string without any prefix or key name.
-
 ## Configuration
 
 The configmap contains the routing rules for your tunnel. All traffic is routed through nginx-ingress controller:
