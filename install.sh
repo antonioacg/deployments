@@ -31,6 +31,18 @@ if ! command -v kubectl >/dev/null 2>&1; then
 fi
 echo "✓ kubectl is installed"
 
+if ! command -v sops >/dev/null 2>&1; then
+    echo "Error: sops is required but not installed."
+    exit 1
+fi
+echo "✓ sops is installed"
+
+if ! command -v jq >/dev/null 2>&1; then
+    echo "Error: jq is required but not installed."
+    exit 1
+fi
+echo "✓ jq is installed"
+
 # Install flux if not present
 if ! command -v flux >/dev/null 2>&1; then
     echo "Flux CLI not found - starting installation..."
@@ -131,3 +143,8 @@ echo "Installation complete! Running verification..."
 flux get all --all-namespaces
 echo "✓ Setup verification completed"
 echo "Flux installation and configuration finished successfully!"
+
+# Initialize and unseal Vault
+echo "Initializing and unsealing Vault..."
+./initialize-vault.sh
+echo "✓ Vault initialized and unsealed."

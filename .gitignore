@@ -5,3 +5,4 @@
 .vscode/
 .key
 *.decrypted~*
+vault-backup/*
