@@ -30,11 +30,19 @@ spec:
         initialDelaySeconds: 60
       extraEnvironmentVars:
         VAULT_LOG_LEVEL: debug
+      extraEnvironmentVarSecrets:
+        AWS_ACCESS_KEY_ID:
+          secretKeyRef:
+            name: minio
+            key: root-user
+            namespace: minio
+        AWS_SECRET_ACCESS_KEY:
+          secretKeyRef:
+            name: minio
+            key: root-password
+            namespace: minio
       dataStorage:
-        enabled: true
-        size: "10Gi"
-        storageClass: "local-path"
-        accessMode: "ReadWriteOnce"
+        enabled: false
       service:
         type: ClusterIP
       standalone:
@@ -48,18 +56,11 @@ spec:
           config: |
             ui = true
 
-            storage "raft" {
-              path = "/vault/data"
-              node_id = "${POD_NAME}"
-              retry_join {
-                leader_api_addr = "http://vault-0.vault-internal:8200"
-              }
-              retry_join {
-                leader_api_addr = "http://vault-1.vault-internal:8200"
-              }
-              retry_join {
-                leader_api_addr = "http://vault-2.vault-internal:8200"
-              }
+            storage "s3" {
+              bucket              = "vault-data"
+              endpoint            = "http://minio.minio.svc.cluster.local:9000"
+              region              = "us-east-1"
+              s3_force_path_style = true
             }
 
             listener "tcp" {

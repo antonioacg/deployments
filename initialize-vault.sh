@@ -59,9 +59,9 @@ until POD_NAME=$(
 done
 echo "Vault pod in Running state: $POD_NAME"
 
-
 # Initialize Vault
 echo "Initializing Vault..."
+echo "kubectl exec -n $NAMESPACE $POD_NAME -- vault operator init -format=json"
 INIT_OUTPUT=$(kubectl exec -n $NAMESPACE $POD_NAME -- vault operator init -format=json)
 if [ $? -ne 0 ]; then
     echo "Error: Failed to initialize Vault."
