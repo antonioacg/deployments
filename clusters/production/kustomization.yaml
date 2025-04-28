@@ -6,4 +6,5 @@ resources:
   - cloudflared.yaml
   - nginx-ingress.yaml
   - pvc.yaml
+  - minio.yaml
   - apps.yaml
