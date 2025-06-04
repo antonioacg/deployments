@@ -50,26 +50,23 @@ spec:
       ha:
         enabled: true
         replicas: 3
-        raft:
-          enabled: true
-          setNodeId: true # Important for HA setup
-          config: |
-            ui = true
+      configInline: |
+        ui = true
 
-            storage "s3" {
-              bucket              = "vault-data"
-              endpoint            = "http://minio.minio.svc.cluster.local:9000"
-              region              = "us-east-1"
-              s3_force_path_style = true
-            }
+        storage "s3" {
+          bucket              = "vault-data"
+          endpoint            = "http://minio.minio.svc.cluster.local:9000"
+          region              = "us-east-1"
+          s3_force_path_style = true
+        }
 
-            listener "tcp" {
-              tls_disable = 1
-              address = "[::]:8200"
-              cluster_address = "[::]:8201"
-            }
+        listener "tcp" {
+          tls_disable = 1
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+        }
 
-            service_registration "kubernetes" {}
+        service_registration "kubernetes" {}
       affinity: "" # Remove default anti-affinity
     ui:
       enabled: true
