@@ -21,13 +21,16 @@ spec:
         enabled: false
       ha:
         enabled: true
-        replicas: 1 # Reduce to 1 replica for testing
+        replicas: 1 # Start with 1 replica for debugging
       service:
         type: ClusterIP
       configInline: |
         ui = true
-        storage "file" {
-          path = "/vault/data"
+        storage "s3" {
+          bucket              = "vault-data"
+          endpoint            = "http://minio.minio.svc.cluster.local:9000"
+          region              = "us-east-1"
+          s3_force_path_style = true
         }
         listener "tcp" {
           tls_disable = 1
