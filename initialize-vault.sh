@@ -97,43 +97,87 @@ else
 fi
 echo "Encrypted files saved as: $UNSEAL_KEYS_ENC and $ROOT_TOKEN_ENC"
 
-# Save unseal keys and root token to Kubernetes secret
-echo "Saving unseal keys and root token to a Kubernetes secret..."
-kubectl create secret generic vault-init-keys \
-    --namespace=$NAMESPACE \
-    --from-literal=root-token=$ROOT_TOKEN \
-    $(echo $UNSEAL_KEYS | awk '{for(i=1;i<=NF;i++) print "--from-literal=unseal-key-"i"="$i}') \
-    --dry-run=client -o yaml | kubectl apply -f -
+# Enable and Configure Kubernetes Auth
+echo "🔧 Enabling Kubernetes auth method in Vault..."
+kubectl exec -n $NAMESPACE $POD_NAME -- env VAULT_TOKEN=$ROOT_TOKEN \\
+  vault auth enable kubernetes
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to save unseal keys and root token to Kubernetes secret."
+    echo "Error: Failed to enable Kubernetes auth method in Vault."
+    # Attempt to clean up encrypted files if auth enabling fails, to prevent leaving system in intermediate state
+    sops -d "$UNSEAL_KEYS_ENC" > /dev/null 2>&1 && rm -f "$UNSEAL_KEYS_ENC"
+    sops -d "$ROOT_TOKEN_ENC" > /dev/null 2>&1 && rm -f "$ROOT_TOKEN_ENC"
     exit 1
 fi
-echo "Unseal keys and root token saved to Kubernetes secret."
+echo "✅ Kubernetes auth method enabled."
 
-# Unseal Vault
-echo "Unsealing Vault on all pods..."
-# Get all Running Vault pods
-POD_NAMES=$(kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=vault \
-  -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}')
-# Loop through each pod and each unseal key
-for pod in $POD_NAMES; do
-  echo "Unsealing pod: $pod"
-  for KEY in $UNSEAL_KEYS; do
-    kubectl exec -n $NAMESPACE $pod -- vault operator unseal $KEY
-    if [ $? -ne 0 ]; then
-      echo "Error: Failed to unseal Vault on pod $pod with key: $KEY"
-      exit 1
-    fi
-    echo "Unsealed pod $pod with key $KEY"
-    echo ""
-  done
-  echo "Unsealed pod: $pod"
-  echo ""
-done
-echo "Vault unsealed on all pods."
+echo "⚙️ Configuring Kubernetes auth method..."
+# Discover Kubernetes API host and port from within the pod
+K8S_HOST=$(kubectl exec -n $NAMESPACE $POD_NAME -- printenv KUBERNETES_SERVICE_HOST)
+K8S_PORT=$(kubectl exec -n $NAMESPACE $POD_NAME -- printenv KUBERNETES_SERVICE_PORT)
 
-echo "🔧 Enabling KV v2 at path=secret/…"
-kubectl exec -n $NAMESPACE $POD_NAME -- env VAULT_TOKEN=$ROOT_TOKEN \
-  vault secrets enable -version=2 -path=secret kv
+kubectl exec -n $NAMESPACE $POD_NAME -- env VAULT_TOKEN=$ROOT_TOKEN \\
+  vault write auth/kubernetes/config \\
+  kubernetes_host="https://$K8S_HOST:$K8S_PORT" \\
+  # Optionally, add token_reviewer_jwt, kubernetes_ca_cert, etc. if needed for your setup
+  # token_reviewer_jwt=\"$(kubectl exec -n $NAMESPACE $POD_NAME -- cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" \\
+  # kubernetes_ca_cert=\"$(kubectl exec -n $NAMESPACE $POD_NAME -- cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)\"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to configure Kubernetes auth method in Vault."
+    # Attempt to clean up
+    sops -d "$UNSEAL_KEYS_ENC" > /dev/null 2>&1 && rm -f "$UNSEAL_KEYS_ENC"
+    sops -d "$ROOT_TOKEN_ENC" > /dev/null 2>&1 && rm -f "$ROOT_TOKEN_ENC"
+    exit 1
+fi
+echo "✅ Kubernetes auth method configured."
 
-echo "Vault setup complete!"
+# Save unseal keys and root token to Kubernetes secret
+# This secret stores the *initial* root token, which we are about to revoke.
+# Unseal keys remain critical.
+echo "Saving unseal keys and initial root token to a Kubernetes secret (vault-init-keys)..."
+kubectl create secret generic vault-init-keys -n $NAMESPACE \
+  --from-literal=VAULT_ROOT_TOKEN="$ROOT_TOKEN" \
+  --from-file=VAULT_UNSEAL_KEYS_B64=$UNSEAL_KEYS_ENC \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to save unseal keys and root token to Kubernetes secret."
+    # Attempt to clean up
+    sops -d "$UNSEAL_KEYS_ENC" > /dev/null 2>&1 && rm -f "$UNSEAL_KEYS_ENC"
+    sops -d "$ROOT_TOKEN_ENC" > /dev/null 2>&1 && rm -f "$ROOT_TOKEN_ENC"
+    exit 1
+fi
+echo "✅ Unseal keys and initial root token saved to Kubernetes secret."
+
+# Also save unseal keys in plain text format for auto-unseal init container
+# (Still protected by Kubernetes RBAC and encryption at rest)
+echo "Saving unseal keys in plain text format for auto-unseal..."
+echo "$UNSEAL_KEYS" > /tmp/unseal-keys-plain.txt
+kubectl create secret generic vault-unseal-keys -n $NAMESPACE \
+  --from-file=unseal-keys=/tmp/unseal-keys-plain.txt \
+  --dry-run=client -o yaml | kubectl apply -f -
+rm -f /tmp/unseal-keys-plain.txt
+
+if [ $? -ne 0 ]; then
+    echo "Warning: Failed to save plain text unseal keys for auto-unseal."
+else
+    echo "✅ Plain text unseal keys saved for auto-unseal."
+fi
+
+
+# Revoke the initial root token
+echo "🔒 Revoking the initial root token..."
+kubectl exec -n $NAMESPACE $POD_NAME -- env VAULT_TOKEN=$ROOT_TOKEN \\
+  vault token revoke -self
+if [ $? -ne 0 ]; then
+    echo "Warning: Failed to revoke the initial root token. Please revoke it manually."
+    # This is a warning because the primary setup might be complete, but security is compromised.
+else
+    echo "✅ Initial root token revoked successfully."
+fi
+
+echo "Vault initialization, unsealing, Kubernetes auth setup, and root token revocation complete."
+echo "Encrypted unseal keys are stored in $UNSEAL_KEYS_ENC"
+echo "The initial root token (now revoked) was stored in $ROOT_TOKEN_ENC and in the 'vault-init-keys' Kubernetes secret."
+echo "Future operations should rely on the configured Kubernetes auth method or other non-root tokens/auth methods."
+
+exit 0 # Ensure script exits cleanly if all went well

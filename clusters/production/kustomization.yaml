@@ -1,10 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+# Phase-based GitOps deployment structure
+# Bootstrap phases:
+# 1. Infrastructure (this file + infrastructure/)
+# 2. Secret population (via Terraform)
+# 3. Flux auth (flux-auth/)
+# 4. Applications (applications/)
+# 5. Verification (handled by bootstrap script)
+
 resources:
-  - namespaces.yaml
-  - vault.yaml
-  - cloudflared.yaml
-  - nginx-ingress.yaml
-  - pvc.yaml
-  - minio.yaml
-  - apps.yaml
+  - infrastructure/
+
+# Note: flux-auth/ and applications/ are deployed in later phases
+# by the bootstrap script to ensure proper sequencing
