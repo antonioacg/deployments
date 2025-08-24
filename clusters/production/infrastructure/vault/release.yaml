@@ -15,30 +15,11 @@ spec:
       version: "0.30.0"
   values:
     server:
-      dataStorage:
-        enabled: false
       standalone:
-        enabled: false
-      ha:
         enabled: true
-        replicas: 1 # Start with 1 replica for debugging
       service:
         type: ClusterIP
-      configInline: |
-        ui = true
-        storage "s3" {
-          bucket              = "vault-data"
-          endpoint            = "http://minio.minio.svc.cluster.local:9000"
-          region              = "us-east-1"
-          s3_force_path_style = true
-        }
-        listener "tcp" {
-          tls_disable = 1
-          address = "[::]:8200"
-          cluster_address = "[::]:8201"
-        }
-        service_registration "kubernetes" {}
     ui:
       enabled: true
     injector:
-      enabled: true
+      enabled: false
