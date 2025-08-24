@@ -86,7 +86,7 @@ spec:
         }
 
         service_registration "kubernetes" {}
-      affinity: "" # Remove default anti-affinity
+      affinity: null # Remove default anti-affinity
     ui:
       enabled: true
     injector:
