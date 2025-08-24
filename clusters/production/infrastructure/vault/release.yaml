@@ -15,78 +15,26 @@ spec:
       version: "0.30.0"
   values:
     server:
-      # Add startup probe to give more time for initialization
-      startupProbe:
-        enabled: true
-        failureThreshold: 60
-        periodSeconds: 5
-      readinessProbe:
-        enabled: true
-        initialDelaySeconds: 30
-        periodSeconds: 10
-      livenessProbe:
-        enabled: true
-        path: "/v1/sys/health?standbyok=true"
-        initialDelaySeconds: 60
-      extraEnvironmentVars:
-        VAULT_LOG_LEVEL: debug
-      extraSecretEnvironmentVars:
-        - envName: AWS_ACCESS_KEY_ID
-          secretName: vault-minio-credentials
-          secretKey: AWS_ACCESS_KEY_ID
-        - envName: AWS_SECRET_ACCESS_KEY
-          secretName: vault-minio-credentials
-          secretKey: AWS_SECRET_ACCESS_KEY
-      # Add init container configuration
-      extraInitContainers:
-        - name: vault-unseal
-          image: curlimages/curl:latest
-          command: ["/bin/sh", "/scripts/unseal-init.sh"]
-          volumeMounts:
-            - name: unseal-keys
-              mountPath: /vault/unseal
-              readOnly: true
-            - name: unseal-scripts
-              mountPath: /scripts
-              readOnly: true
-          env:
-            - name: VAULT_ADDR
-              value: "http://localhost:8200"
       dataStorage:
         enabled: false
-      service:
-        type: ClusterIP
       standalone:
-        enabled: false # Explicitly disable standalone mode
+        enabled: false
       ha:
         enabled: true
-        replicas: 3
-      # Add volume configuration for init container
-      extraVolumes:
-        - name: unseal-keys
-          secret:
-            secretName: vault-unseal-keys
-        - name: unseal-scripts
-          configMap:
-            name: vault-unseal-scripts
+        replicas: 1 # Reduce to 1 replica for testing
+      service:
+        type: ClusterIP
       configInline: |
         ui = true
-
-        storage "s3" {
-          bucket              = "vault-data"
-          endpoint            = "http://minio.minio.svc.cluster.local:9000"
-          region              = "us-east-1"
-          s3_force_path_style = true
+        storage "file" {
+          path = "/vault/data"
         }
-
         listener "tcp" {
           tls_disable = 1
           address = "[::]:8200"
           cluster_address = "[::]:8201"
         }
-
         service_registration "kubernetes" {}
-      affinity: null # Remove default anti-affinity
     ui:
       enabled: true
     injector:
