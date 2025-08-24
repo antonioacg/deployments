@@ -30,17 +30,13 @@ spec:
         initialDelaySeconds: 60
       extraEnvironmentVars:
         VAULT_LOG_LEVEL: debug
-      extraEnvironmentVarSecrets:
-        AWS_ACCESS_KEY_ID:
-          secretKeyRef:
-            name: minio
-            key: root-user
-            namespace: minio
-        AWS_SECRET_ACCESS_KEY:
-          secretKeyRef:
-            name: minio
-            key: root-password
-            namespace: minio
+      extraSecretEnvironmentVars:
+        - secretName: vault-minio-credentials
+          secretKey: AWS_ACCESS_KEY_ID
+          envName: AWS_ACCESS_KEY_ID
+        - secretName: vault-minio-credentials
+          secretKey: AWS_SECRET_ACCESS_KEY
+          envName: AWS_SECRET_ACCESS_KEY
       # Add init container configuration
       extraInitContainers:
         - name: vault-unseal

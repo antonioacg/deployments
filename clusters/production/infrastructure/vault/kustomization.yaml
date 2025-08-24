@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - repositories.yaml
   - release.yaml
-  - unseal-keys-secret.sops.yaml
+  - vault-minio-credentials-externalsecret.yaml
   - unseal-sa.yaml
   - unseal-role.yaml
   - unseal-rolebinding.yaml
