@@ -15,10 +15,72 @@ spec:
       version: "0.30.1"
   values:
     server:
-      standalone:
+      # Add startup probe to give more time for initialization
+      startupProbe:
         enabled: true
+        failureThreshold: 60
+        periodSeconds: 5
+      readinessProbe:
+        enabled: true
+        initialDelaySeconds: 30
+        periodSeconds: 10
+      livenessProbe:
+        enabled: true
+        path: "/v1/sys/health?standbyok=true"
+        initialDelaySeconds: 60
+      extraEnvironmentVars:
+        VAULT_LOG_LEVEL: debug
+      # File storage for standalone mode - no external dependencies
+      # Auto-unseal init container configuration
+      extraInitContainers:
+        - name: vault-unseal-init
+          image: curlimages/curl:latest
+          command: ["/bin/sh", "/scripts/unseal-init.sh"]
+          volumeMounts:
+            - name: unseal-keys
+              mountPath: /vault/unseal
+              readOnly: true
+            - name: unseal-scripts
+              mountPath: /scripts
+              readOnly: true
+          env:
+            - name: VAULT_ADDR
+              value: "http://localhost:8200"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+      # Use service account with RBAC permissions
+      serviceAccount:
+        name: vault-unseal
+      dataStorage:
+        enabled: false
       service:
         type: ClusterIP
+      standalone:
+        enabled: true
+      # Add volume configuration for init container
+      extraVolumes:
+        - name: unseal-keys
+          secret:
+            secretName: vault-unseal-keys
+        - name: unseal-scripts
+          configMap:
+            name: vault-unseal-scripts
+      # File storage configuration for standalone mode
+      config: |
+        ui = true
+
+        storage "file" {
+          path = "/vault/data"
+        }
+
+        listener "tcp" {
+          tls_disable = 1
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+        }
+      # Remove default anti-affinity for single node testing
+      affinity: null
     ui:
       enabled: true
     injector:
