@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: vault-unseal-reader-binding
+  name: vault-unseal-manager-binding
   namespace: vault
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: vault-unseal-reader
+  name: vault-unseal-manager
 subjects:
 - kind: ServiceAccount
   name: vault-unseal

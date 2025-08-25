@@ -8,40 +8,94 @@ data:
     #!/bin/sh
     set -e
 
+    echo "=== Vault Auto-Bootstrap Init Container ==="
+    echo "Goal: Auto-initialize and auto-unseal Vault with zero pre-existing secrets"
+
     # Wait for Vault to be ready
     echo "Waiting for Vault API to be available..."
     until curl -s -f http://localhost:8200/v1/sys/health >/dev/null 2>&1; do
       echo "Vault not ready, waiting..."
       sleep 5
     done
+    echo "✅ Vault API is available"
 
     # Check if Vault is already initialized
     echo "Checking Vault initialization status..."
-    INIT_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8200/v1/sys/init)
-    if [ "$INIT_STATUS" = "400" ]; then
-      echo "Vault is already initialized, checking seal status..."
+    INIT_RESPONSE=$(curl -s http://localhost:8200/v1/sys/init)
+    IS_INITIALIZED=$(echo "$INIT_RESPONSE" | jq -r '.initialized')
+
+    if [ "$IS_INITIALIZED" = "false" ]; then
+      echo "🚀 Vault is NOT initialized - performing auto-initialization..."
+      
+      # Initialize Vault with 5 key shares, threshold of 3
+      echo "Initializing Vault with key shares..."
+      INIT_RESULT=$(curl -s -X POST -d '{"secret_shares": 5, "secret_threshold": 3}' http://localhost:8200/v1/sys/init)
+      
+      # Extract unseal keys and root token
+      UNSEAL_KEYS=$(echo "$INIT_RESULT" | jq -r '.keys[]')
+      ROOT_TOKEN=$(echo "$INIT_RESULT" | jq -r '.root_token')
+      
+      echo "✅ Vault initialized successfully"
+      echo "Generated $(echo "$UNSEAL_KEYS" | wc -l) unseal keys"
+      
+      # Create Kubernetes secret with unseal keys (zero-SOPS approach)
+      echo "Creating vault-unseal-keys Kubernetes secret..."
+      kubectl create secret generic vault-unseal-keys \
+        --namespace=vault \
+        --from-literal=unseal-keys="$UNSEAL_KEYS" \
+        --dry-run=client -o yaml | kubectl apply -f -
+      echo "✅ Unseal keys stored in Kubernetes secret"
+      
+      # Unseal Vault immediately after initialization
+      echo "Unsealing newly initialized Vault..."
+      echo "$UNSEAL_KEYS" | head -3 | while read key; do
+        if [ -n "$key" ]; then
+          echo "Applying unseal key..."
+          curl -s -X POST -d "{\"key\":\"$key\"}" http://localhost:8200/v1/sys/unseal
+        fi
+      done
+      echo "✅ Vault unsealed after initialization"
+      
+    elif [ "$IS_INITIALIZED" = "true" ]; then
+      echo "✅ Vault is already initialized"
+      
+      # Check seal status
       SEAL_STATUS=$(curl -s http://localhost:8200/v1/sys/seal-status | jq -r '.sealed')
       if [ "$SEAL_STATUS" = "true" ]; then
-        echo "Vault is sealed, attempting to unseal..."
-        # Read unseal keys from Kubernetes secret
-        UNSEAL_KEYS=$(cat /vault/unseal/unseal-keys)
+        echo "🔓 Vault is sealed - attempting to unseal..."
         
-        # Unseal with each key (assuming 5 keys, adjust as needed)
-        echo "$UNSEAL_KEYS" | while read key; do
+        # Read unseal keys from Kubernetes secret using kubectl
+        echo "Reading existing unseal keys from Kubernetes secret..."
+        if UNSEAL_KEYS=$(kubectl get secret vault-unseal-keys -n vault -o jsonpath='{.data.unseal-keys}' | base64 -d 2>/dev/null); then
+          echo "✅ Successfully read unseal keys from secret"
+        else
+          echo "❌ ERROR: Vault is initialized but vault-unseal-keys secret not found!"
+          echo "This should not happen in a properly bootstrapped system."
+          exit 1
+        fi
+        
+        # Unseal with existing keys (use first 3 keys - threshold)
+        echo "$UNSEAL_KEYS" | head -3 | while read key; do
           if [ -n "$key" ]; then
             echo "Applying unseal key..."
             curl -s -X POST -d "{\"key\":\"$key\"}" http://localhost:8200/v1/sys/unseal
           fi
         done
+        echo "✅ Vault unsealed with existing keys"
         
-        echo "Unseal process completed"
       else
-        echo "Vault is already unsealed"
+        echo "✅ Vault is already unsealed"
       fi
-    elif [ "$INIT_STATUS" = "200" ]; then
-      echo "Vault is not initialized, this should be done manually"
     else
-      echo "Unexpected Vault status: $INIT_STATUS"
+      echo "❌ ERROR: Could not determine Vault initialization status"
+      exit 1
     fi
 
-    echo "Init container completed"
+    # Final status check
+    echo "=== Final Vault Status ==="
+    FINAL_STATUS=$(curl -s http://localhost:8200/v1/sys/seal-status)
+    echo "Sealed: $(echo "$FINAL_STATUS" | jq -r '.sealed')"
+    echo "Initialized: $(echo "$FINAL_STATUS" | jq -r '.initialized')"
+    echo "Version: $(echo "$FINAL_STATUS" | jq -r '.version')"
+
+    echo "=== Auto-Bootstrap Init Container Completed Successfully ==="

@@ -31,15 +31,12 @@ spec:
       extraEnvironmentVars:
         VAULT_LOG_LEVEL: debug
       # File storage for standalone mode - no external dependencies
-      # Auto-unseal init container configuration
+      # Auto-unseal init container configuration (zero-SOPS approach)
       extraInitContainers:
         - name: vault-unseal-init
-          image: curlimages/curl:latest
+          image: bitnami/kubectl:latest
           command: ["/bin/sh", "/scripts/unseal-init.sh"]
           volumeMounts:
-            - name: unseal-keys
-              mountPath: /vault/unseal
-              readOnly: true
             - name: unseal-scripts
               mountPath: /scripts
               readOnly: true
@@ -58,11 +55,8 @@ spec:
         type: ClusterIP
       standalone:
         enabled: true
-      # Add volume configuration for init container
+      # Add volume configuration for init container scripts
       extraVolumes:
-        - name: unseal-keys
-          secret:
-            secretName: vault-unseal-keys
         - name: unseal-scripts
           configMap:
             name: vault-unseal-scripts

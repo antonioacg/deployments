@@ -1,104 +1,78 @@
-# Deployments Setup on Ubuntu Server
+# GitOps Deployments Repository
 
-This guide explains a streamlined, GitOps-driven deployment using Flux in read-only mode for managing a Kubernetes cluster through Git.
+**Part of a 3-repository zero-secrets GitOps platform**
 
-## Prerequisites
+This repository contains Kubernetes manifests for a complete zero-secrets architecture using Vault + External Secrets Operator. It works as part of a larger platform with:
 
-1. An Ubuntu server with Git installed
-2. Access to a Kubernetes cluster 
-3. A GitHub token (`GITHUB_TOKEN`) with read access for your private repository
+- **infra-management**: Bootstrap orchestrator (runs the deployment)
+- **infra**: Terraform infrastructure and Vault secret management  
+- **deployments**: This repository (Kubernetes manifests)
 
-## Installation
+## How to Deploy
 
-1. **Set Required Environment Variables**:
-   ```bash
-   export GITHUB_TOKEN="your-github-token"
-   export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
-   ```
+This repository cannot be used standalone. To deploy the complete platform:
 
-2. **Install SOPS and Age**:
-   ```bash
-   ./install-sops-age.sh
-   ```
+1. Go to the infra-management repository
+2. Run the bootstrap script with your GitHub token
+3. The platform automatically deploys all components including the manifests from this repo
 
-3. **Install Flux and Configure Cluster**:
-   ```bash
-   ./install.sh
-   ```
+## Zero-Secrets Architecture
 
-4. **Verify the Installation**:
-   ```bash
-   flux get all --all-namespaces
-   ```
+All secrets flow: **Terraform** → **Vault** → **External Secrets** → **Kubernetes**
 
-## Retrieving Your Public Key
+- ✅ **No secrets in Git repositories** (ever, anywhere)
+- ✅ **Vault manages all secrets** with centralized storage
+- ✅ **External Secrets** syncs from Vault to Kubernetes automatically
+- ✅ **Flux CD** provides GitOps delivery with read-only Git access
 
-After installing SOPS and Age, your public key is stored in the keys file. To extract it:
+### Infrastructure Components
+- **Vault**: Secret management with auto-unseal capability
+- **External Secrets Operator**: Syncs secrets from Vault to Kubernetes
+- **Cloudflared**: Secure tunnel to Cloudflare (optional)
 
-```bash
-grep '^# public key:' $SOPS_AGE_KEY_FILE | cut -d' ' -f4
+### Applications  
+- **Stremio**: Example media streaming application
+
+### Repository Structure
+```
+clusters/production/
+├── infrastructure/          # Core platform components
+│   ├── vault/              # Vault with auto-unseal
+│   ├── external-secrets/   # External Secrets Operator  
+│   └── cloudflared/        # Cloudflare tunnel
+├── applications/           # User applications
+└── kustomization.yaml     # Root Flux configuration
 ```
 
-Use this public key (starts with `age1...`) when encrypting your secrets.
+## Making Changes
 
-> **Important**: 
-> - Never commit your private key file to Git
-> - Back up your `keys.txt` file securely
-> - The key file is located at `~/.config/sops/age/keys.txt`
-
-## Infrastructure Overview
-
-- **Traffic Flow**:
-  1. Internet → Cloudflare
-  2. Cloudflare → Cloudflared Tunnel
-  3. Cloudflared → Nginx Ingress
-  4. Nginx Ingress → Services
-
-- **Key Components**:
-  - Cloudflared: Manages secure tunnel to Cloudflare
-  - Nginx Ingress: Internal traffic routing
-  - Flux: GitOps deployment management
-  - SOPS: Secret encryption
-  - Age: Encryption key management
-
-## Folder Structure
-
-- **namespaces/**: Namespace definitions
-- **clusters/production/**:
-  - **nginx-ingress/**: Ingress controller and routes
-  - **cloudflared/**: Cloudflare tunnel configuration
-  - **apps/**: Application deployments
-  - **pvc/**: Persistent volume claims
+To update deployments:
+1. Edit Kubernetes manifests in this repository
+2. Commit and push to main branch  
+3. Flux automatically syncs changes to the cluster
+4. External Secrets provides secrets automatically (no manual secret management needed)
 
 ## Troubleshooting
 
-1. **Check Flux Status**:
-   ```bash
-   flux get all
-   ```
+### Check Flux status
+```bash
+flux get sources git
+flux get kustomizations
+```
 
-2. **Check Pod Status**:
-   ```bash
-   kubectl get pods -A
-   ```
+### Debug External Secrets
+```bash
+kubectl describe externalsecret <name> -n <namespace>
+kubectl logs -n external-secrets-system -l app.kubernetes.io/name=external-secrets
+```
 
-3. **View Component Logs**:
-   ```bash
-   # Cloudflared logs
-   kubectl logs -n cloudflared -l app=cloudflared
+### Vault issues
+```bash
+kubectl logs -n vault -l app.kubernetes.io/name=vault
+kubectl exec -n vault vault-0 -- vault status
+```
 
-   # Nginx ingress logs
-   kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
-   ```
-
-4. **Verify SOPS/Age Setup**:
-   ```bash
-   # Check SOPS version
-   sops --version
-
-   # Verify Age key file
-   ls -l $SOPS_AGE_KEY_FILE
-
-   # Test SOPS encryption
-   echo "secret: test" | sops --encrypt --age $(grep "^# public key:" $SOPS_AGE_KEY_FILE | cut -d' ' -f4) /dev/stdin
-   ```
+**Common Issues:**
+- If deployments aren't syncing: Check `flux get sources git` 
+- If secrets are missing: Verify `kubectl get externalsecrets -A`
+- If Vault is sealed: Check `kubectl exec -n vault vault-0 -- vault status`
