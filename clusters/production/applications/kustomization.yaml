@@ -3,11 +3,11 @@ kind: Kustomization
 
 resources:
   - apps/
-  - cloudflared/
-  - minio/
-  - nginx-ingress/
   - pvc/
 
-commonLabels:
-  phase: applications
-  managed-by: flux
+labels:
+- includeSelectors: true
+  includeTemplates: true
+  pairs:
+    tier: applications
+    managed-by: flux

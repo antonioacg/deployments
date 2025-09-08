@@ -4,6 +4,9 @@ kind: Kustomization
 resources:
   - github-token-externalsecret.yaml
 
-commonLabels:
-  phase: flux-auth
-  managed-by: flux
+labels:
+- includeSelectors: true
+  includeTemplates: true
+  pairs:
+    tier: flux-auth
+    managed-by: flux
