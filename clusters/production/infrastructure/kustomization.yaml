@@ -1,14 +1,19 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+metadata:
+  name: infrastructure
+  namespace: flux-system
+
 resources:
-  - minio/
-  - cloudflared/
-  - nginx-ingress/
+  - ingress-nginx/
 
 labels:
-- includeSelectors: true
-  includeTemplates: true
-  pairs:
-    tier: infrastructure
-    managed-by: flux
+  - includeSelectors: true
+    pairs:
+      tier: infrastructure
+      managed-by: flux
+
+commonAnnotations:
+  note: "Infrastructure components deployed via GitOps"

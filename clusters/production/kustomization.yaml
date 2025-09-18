@@ -1,20 +1,22 @@
+# Production Cluster Root Kustomization
+# Terraform-first architecture: Core infrastructure via Terraform, platform components via GitOps
+
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# 3-Tier GitOps deployment structure
-# Tier 1: Bootstrap (this file) - zero external dependencies
-# Tier 2: Infrastructure - depends on Vault secrets  
-# Tier 3: Applications - depends on infrastructure services
-# Deployment order managed by bootstrap script
-
 resources:
-  - bootstrap/
+- flux-system
+- infrastructure
+- applications
 
+# Global labels for all resources
 labels:
 - includeSelectors: true
-  includeTemplates: true
   pairs:
+    cluster: production
     managed-by: flux
 
-# Note: infrastructure/ and applications/ are deployed in later tiers
-# by the bootstrap script to ensure proper dependency sequencing
+# Global annotations
+commonAnnotations:
+  cluster: production
+  environment: homelab

@@ -1,0 +1,54 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ingress-nginx
+      version: "4.11.3"
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+        namespace: ingress-nginx
+      interval: 5m
+  values:
+    controller:
+      # Configure for k3s environment with existing traefik
+      service:
+        type: NodePort
+        nodePorts:
+          http: 30080
+          https: 30443
+      # Disable default IngressClass to coexist with Traefik
+      ingressClassResource:
+        default: false
+        name: nginx
+      # ARM64 compatibility
+      image:
+        repository: registry.k8s.io/ingress-nginx/controller
+        tag: "v1.11.2"
+      # Resource limits for homelab environment
+      resources:
+        requests:
+          cpu: 100m
+          memory: 90Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      # Configure for single-node cluster
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+    # Admission webhooks
+    admissionWebhooks:
+      enabled: true
+      patch:
+        nodeSelector:
+          kubernetes.io/arch: arm64
