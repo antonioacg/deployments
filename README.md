@@ -26,19 +26,19 @@ All secrets flow: **Terraform** → **Vault** → **External Secrets** → **Kub
 - ✅ **Flux CD** provides GitOps delivery with read-only Git access
 
 ### Infrastructure Components
-- **Vault**: Secret management with automated Shamir unsealing
+- **Vault**: Secret management with Bank-Vaults operator (automated unsealing)
 - **External Secrets Operator**: Syncs secrets from Vault to Kubernetes
 - **Cloudflared**: Secure tunnel to Cloudflare (optional)
 
-### Applications  
+### Applications
 - **Stremio**: Example media streaming application
 
 ### Repository Structure
 ```
 clusters/production/
 ├── infrastructure/          # Core platform components
-│   ├── vault/              # Vault with automated unsealing
-│   ├── external-secrets/   # External Secrets Operator  
+│   ├── vault/              # Vault with Bank-Vaults operator
+│   ├── external-secrets/   # External Secrets Operator
 │   └── cloudflared/        # Cloudflare tunnel
 ├── applications/           # User applications
 └── kustomization.yaml     # Root Flux configuration
