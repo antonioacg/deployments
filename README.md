@@ -26,7 +26,7 @@ All secrets flow: **Terraform** → **Vault** → **External Secrets** → **Kub
 - ✅ **Flux CD** provides GitOps delivery with read-only Git access
 
 ### Infrastructure Components
-- **Vault**: Secret management with auto-unseal capability
+- **Vault**: Secret management with automated Shamir unsealing
 - **External Secrets Operator**: Syncs secrets from Vault to Kubernetes
 - **Cloudflared**: Secure tunnel to Cloudflare (optional)
 
@@ -37,7 +37,7 @@ All secrets flow: **Terraform** → **Vault** → **External Secrets** → **Kub
 ```
 clusters/production/
 ├── infrastructure/          # Core platform components
-│   ├── vault/              # Vault with auto-unseal
+│   ├── vault/              # Vault with automated unsealing
 │   ├── external-secrets/   # External Secrets Operator  
 │   └── cloudflared/        # Cloudflare tunnel
 ├── applications/           # User applications
