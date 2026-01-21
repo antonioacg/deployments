@@ -10,8 +10,9 @@ resources:
 - applications
 
 # Global labels for all resources
+# NOTE: includeSelectors: false to avoid modifying immutable deployment selectors
 labels:
-- includeSelectors: true
+- includeSelectors: false
   pairs:
     cluster: production
     managed-by: flux
