@@ -37,13 +37,14 @@ spec:
 
   # Vault server configuration
   config:
-    api_addr: http://vault.vault.svc.cluster.local:8200
-    cluster_addr: http://vault.vault.svc.cluster.local:8201
+    api_addr: https://vault.vault.svc.cluster.local:8200
+    cluster_addr: https://vault.vault.svc.cluster.local:8201
 
     listener:
       - tcp:
           address: "0.0.0.0:8200"
-          tls_disable: true  # TLS termination at ingress
+          tls_cert_file: /vault/tls/server.crt
+          tls_key_file: /vault/tls/server.key
 
     storage:
       s3:
