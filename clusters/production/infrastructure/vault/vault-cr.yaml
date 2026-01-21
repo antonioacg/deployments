@@ -10,6 +10,9 @@ spec:
   size: 1
   image: hashicorp/vault:1.15.2
 
+  # Use dedicated service account with RBAC for unseal keys
+  serviceAccount: vault
+
   # Kubernetes Secrets-based unsealing (protected by Phase 1 etcd encryption)
   unsealConfig:
     kubernetes:

@@ -1,0 +1,60 @@
+---
+# Service Account for Vault pods
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault
+  namespace: vault
+---
+# Role for Vault to manage unseal keys secret
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vault-unseal-keys
+  namespace: vault
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "create", "update", "patch", "delete"]
+---
+# RoleBinding for Vault service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vault-unseal-keys
+  namespace: vault
+subjects:
+- kind: ServiceAccount
+  name: vault
+  namespace: vault
+roleRef:
+  kind: Role
+  name: vault-unseal-keys
+  apiGroup: rbac.authorization.k8s.io
+---
+# ClusterRole for Vault to use TokenReview API
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vault-auth-delegator
+rules:
+- apiGroups: ["authentication.k8s.io"]
+  resources: ["tokenreviews"]
+  verbs: ["create"]
+- apiGroups: ["authorization.k8s.io"]
+  resources: ["subjectaccessreviews"]
+  verbs: ["create"]
+---
+# ClusterRoleBinding for Vault auth delegator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: vault
+  namespace: vault
+roleRef:
+  kind: ClusterRole
+  name: vault-auth-delegator
+  apiGroup: rbac.authorization.k8s.io
