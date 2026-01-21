@@ -22,8 +22,8 @@ spec:
       secretThreshold: 3
 
   # S3 storage credentials from Secret (created by bootstrap script)
-  # Use envsConfig to set AWS credentials as environment variables
-  envsConfig:
+  # Use vaultEnvsConfig to set AWS credentials as environment variables in the vault container
+  vaultEnvsConfig:
     - name: AWS_ACCESS_KEY_ID
       valueFrom:
         secretKeyRef:
