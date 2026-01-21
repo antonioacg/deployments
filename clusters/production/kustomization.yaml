@@ -7,7 +7,7 @@ kind: Kustomization
 resources:
 - flux-system
 - infrastructure
-- applications
+# - applications  # TODO: Enable after infrastructure is stable
 
 # Global labels for all resources
 # NOTE: includeSelectors: false to avoid modifying immutable deployment selectors
