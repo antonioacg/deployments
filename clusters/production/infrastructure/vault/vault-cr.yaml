@@ -1,0 +1,124 @@
+---
+# Vault Custom Resource managed by Bank-Vaults Operator
+# Converted from infra/modules/vault/main.tf:34-177
+apiVersion: vault.banzaicloud.com/v1alpha1
+kind: Vault
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  size: 1
+  image: hashicorp/vault:1.15.2
+
+  # Kubernetes Secrets-based unsealing (protected by Phase 1 etcd encryption)
+  unsealConfig:
+    kubernetes:
+      secretNamespace: vault
+      secretName: vault-unseal-keys
+    options:
+      preFlightChecks: true
+      storeRootToken: true  # Store for bootstrap, revoke after
+      secretShares: 5
+      secretThreshold: 3
+
+  # S3 storage credentials from Secret (created by bootstrap script)
+  # Bank-Vaults mounts secret keys as env vars with specified prefix
+  # Secret keys: ACCESS_KEY_ID, SECRET_ACCESS_KEY -> AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+  credentialsConfig:
+    env: AWS_
+    path: /vault/storage
+    secretName: vault-storage-credentials
+
+  # Vault server configuration
+  config:
+    api_addr: http://vault.vault.svc.cluster.local:8200
+    cluster_addr: http://vault.vault.svc.cluster.local:8201
+
+    listener:
+      - tcp:
+          address: "0.0.0.0:8200"
+          tls_disable: true  # TLS termination at ingress
+
+    storage:
+      s3:
+        endpoint: http://bootstrap-minio.bootstrap.svc.cluster.local:9000
+        bucket: vault-storage
+        region: us-east-1  # MinIO requires region
+        disable_ssl: "true"
+        s3_force_path_style: "true"  # Required for MinIO
+        # Credentials from vault-storage-credentials Secret via credentialsConfig
+
+    ui: true
+
+  # Automatic Vault configuration after initialization
+  externalConfig:
+    # Enable Kubernetes auth backend
+    auth:
+      - type: kubernetes
+        path: kubernetes
+        config:
+          kubernetes_host: https://kubernetes.default.svc
+        roles:
+          - name: external-secrets
+            bound_service_account_names:
+              - external-secrets
+            bound_service_account_namespaces:
+              - external-secrets-system
+            policies:
+              - external-secrets
+            ttl: 1h
+
+    # Policies for External Secrets
+    policies:
+      - name: external-secrets
+        rules: |
+          path "secret/data/*" {
+            capabilities = ["read", "list"]
+          }
+          path "secret/metadata/*" {
+            capabilities = ["read", "list"]
+          }
+
+    # Enable KV v2 secrets engine
+    secrets:
+      - type: kv
+        path: secret
+        description: KV v2 secrets engine
+        options:
+          version: "2"
+
+  # Resource allocation
+  resources:
+    vault:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  # Service configuration
+  serviceType: ClusterIP
+
+  # Monitoring (enable in Phase 3)
+  serviceMonitorEnabled: false
+
+  # ARM64 compatibility
+  nodeSelector:
+    kubernetes.io/arch: arm64
+
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+
+  # Volume for audit logs
+  volumeClaimTemplates:
+    - metadata:
+        name: vault-audit
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi

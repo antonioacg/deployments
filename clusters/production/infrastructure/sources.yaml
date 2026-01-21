@@ -1,0 +1,30 @@
+---
+# HelmRepository sources for infrastructure components
+# These are defined at infrastructure level to be available for all Kustomizations
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: bank-vaults
+  namespace: flux-system
+spec:
+  interval: 5m
+  type: oci
+  url: oci://ghcr.io/bank-vaults/helm-charts
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: external-secrets
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://charts.external-secrets.io
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: ingress-nginx
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://kubernetes.github.io/ingress-nginx

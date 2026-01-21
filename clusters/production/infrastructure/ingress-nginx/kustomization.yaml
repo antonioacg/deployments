@@ -8,7 +8,6 @@ metadata:
 
 resources:
   - namespace.yaml
-  - helmrepository.yaml
   - helmrelease.yaml
 
 labels:

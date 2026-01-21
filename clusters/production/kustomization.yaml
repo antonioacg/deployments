@@ -1,10 +1,11 @@
 # Production Cluster Root Kustomization
-# Terraform-first architecture: Core infrastructure via Terraform, platform components via GitOps
+# Flux-first architecture: Bootstrap via Terraform, infrastructure via GitOps
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+- flux-system
 - infrastructure
 - applications
 
