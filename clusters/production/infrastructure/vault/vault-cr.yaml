@@ -22,12 +22,18 @@ spec:
       secretThreshold: 3
 
   # S3 storage credentials from Secret (created by bootstrap script)
-  # Bank-Vaults mounts secret keys as env vars with specified prefix
-  # Secret keys: ACCESS_KEY_ID, SECRET_ACCESS_KEY -> AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-  credentialsConfig:
-    env: AWS_
-    path: /vault/storage
-    secretName: vault-storage-credentials
+  # Use envsConfig to set AWS credentials as environment variables
+  envsConfig:
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: vault-storage-credentials
+          key: ACCESS_KEY_ID
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: vault-storage-credentials
+          key: SECRET_ACCESS_KEY
 
   # Vault server configuration
   config:
