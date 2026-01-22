@@ -10,4 +10,5 @@ resources:
   - vault-operator.yaml
   - vault.yaml
   - external-secrets.yaml
+  - flux-secrets.yaml
   - ingress-nginx.yaml

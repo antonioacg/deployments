@@ -1,0 +1,31 @@
+---
+# ExternalSecret for Flux git authentication
+# Syncs GitHub token from Vault to replace bootstrap-created secret
+#
+# Prerequisites:
+#   1. Bootstrap must create initial flux-git-auth Secret (chicken-and-egg)
+#   2. Store token in Vault: vault kv put secret/flux/git-auth username=git password=<GITHUB_TOKEN>
+#   3. This ExternalSecret will overwrite the bootstrap secret
+#
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: flux-git-auth
+  namespace: flux-system
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: vault-backend
+  target:
+    name: flux-git-auth
+    creationPolicy: Owner
+  data:
+    - secretKey: username
+      remoteRef:
+        key: secret/data/flux/git-auth
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: secret/data/flux/git-auth
+        property: password
