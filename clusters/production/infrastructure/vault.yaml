@@ -22,6 +22,11 @@ spec:
   timeout: 10m
   dependsOn:
     - name: vault-operator
+  # Variable substitution from cluster-vars ConfigMap
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-vars
   healthChecks:
     - apiVersion: vault.banzaicloud.com/v1alpha1
       kind: Vault

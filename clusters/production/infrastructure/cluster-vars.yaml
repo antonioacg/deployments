@@ -1,0 +1,29 @@
+---
+# Cluster Variables ConfigMap
+# Centralized configuration for service endpoints and cluster settings
+# Used by Flux Kustomizations via postBuild.substituteFrom
+#
+# This allows changing service URLs in one place rather than hard-coding
+# throughout the manifests. Useful for:
+# - Multi-cluster deployments with different service names
+# - Testing with different endpoints
+# - Migrating services to new namespaces
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-vars
+  namespace: flux-system
+data:
+  # Cluster domain (Kubernetes default)
+  CLUSTER_DOMAIN: cluster.local
+
+  # Vault service endpoints
+  VAULT_ADDR: https://vault.vault.svc.cluster.local:8200
+  VAULT_CLUSTER_ADDR: https://vault.vault.svc.cluster.local:8201
+  VAULT_NAMESPACE: vault
+  VAULT_SERVICE: vault
+
+  # MinIO service endpoint (bootstrap storage)
+  MINIO_ENDPOINT: http://bootstrap-minio.bootstrap.svc.cluster.local:9000
+  MINIO_NAMESPACE: bootstrap
+  MINIO_SERVICE: bootstrap-minio

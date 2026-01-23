@@ -67,9 +67,10 @@ spec:
           key: SECRET_ACCESS_KEY
 
   # Vault server configuration
+  # NOTE: Variables substituted by Flux from cluster-vars ConfigMap
   config:
-    api_addr: https://vault.vault.svc.cluster.local:8200
-    cluster_addr: https://vault.vault.svc.cluster.local:8201
+    api_addr: ${VAULT_ADDR}
+    cluster_addr: ${VAULT_CLUSTER_ADDR}
 
     listener:
       - tcp:
@@ -79,7 +80,7 @@ spec:
 
     storage:
       s3:
-        endpoint: http://bootstrap-minio.bootstrap.svc.cluster.local:9000
+        endpoint: ${MINIO_ENDPOINT}
         bucket: vault-storage
         region: local  # MinIO accepts any string; "local" is clearer than fake AWS region
         disable_ssl: "true"
