@@ -2,9 +2,29 @@
 # Vault Custom Resource managed by Bank-Vaults Operator
 # Bank-Vaults Vault CR - manages Vault deployment, unsealing, and configuration
 #
-# NOTE: The Bank-Vaults operator automatically creates a 'vault-tls' Secret in the
-# vault namespace containing the CA certificate used by ClusterSecretStore.
-# This secret is created implicitly - see spec.config.listener.tls_cert_file/key_file.
+# TLS CERTIFICATE MANAGEMENT
+# ==========================
+# The Bank-Vaults operator automatically manages TLS certificates:
+#
+# 1. AUTOMATIC CREATION:
+#    - Operator creates 'vault-tls' Secret in vault namespace on first deployment
+#    - Contains: ca.crt, server.crt, server.key
+#    - Used by ClusterSecretStore for secure Vault communication
+#
+# 2. CERTIFICATE RENEWAL:
+#    - Bank-Vaults operator monitors cert expiry and auto-renews before expiration
+#    - Default validity: 1 year, renewal threshold: 30 days before expiry
+#    - Vault pods are automatically restarted when certs are renewed
+#    - No manual intervention required under normal operation
+#
+# 3. MANUAL RENEWAL (if needed):
+#    - Delete the vault-tls secret: kubectl delete secret vault-tls -n vault
+#    - Restart the vault-operator: kubectl rollout restart deployment -n vault-operator vault-operator
+#    - Operator will regenerate certificates automatically
+#
+# 4. MONITORING:
+#    - Check cert expiry: kubectl get secret vault-tls -n vault -o jsonpath='{.data.server\.crt}' | base64 -d | openssl x509 -noout -enddate
+#    - Vault operator logs show renewal events: kubectl logs -n vault-operator -l app.kubernetes.io/name=vault-operator
 
 apiVersion: vault.banzaicloud.com/v1alpha1
 kind: Vault

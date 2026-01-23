@@ -54,5 +54,7 @@ spec:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: NoSchedule
+    # Use maxUnavailable instead of minAvailable to allow node drains
+    # minAvailable: 1 with replicaCount: 1 blocks all voluntary disruptions
     podDisruptionBudget:
-      minAvailable: 1
+      maxUnavailable: 1
