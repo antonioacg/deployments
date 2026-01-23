@@ -11,6 +11,9 @@ kind: Vault
 metadata:
   name: vault
   namespace: vault
+  annotations:
+    # Prevent Flux from deleting this resource if file is accidentally removed from git
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   size: 1
   storeRootToken: false

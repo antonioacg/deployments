@@ -3,6 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: stremio-pvc
   namespace: production
+  annotations:
+    # Prevent Flux from deleting this PVC if file is accidentally removed from git (data loss prevention)
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce
