@@ -54,3 +54,5 @@ spec:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: NoSchedule
+    podDisruptionBudget:
+      minAvailable: 1
