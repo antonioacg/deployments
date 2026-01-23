@@ -45,7 +45,10 @@ spec:
 
     serviceAccount:
       create: true
-      name: external-secrets-operator
+      name: external-secrets
+      annotations:
+        vault.hashicorp.com/auth-path: auth/kubernetes
+        vault.hashicorp.com/role: external-secrets
 
     # ARM64 compatibility
     nodeSelector:

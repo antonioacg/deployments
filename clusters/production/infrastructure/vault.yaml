@@ -17,6 +17,9 @@ spec:
   timeout: 10m
   dependsOn:
     - name: vault-operator
+  commonMetadata:
+    annotations:
+      config.kubernetes.io/depends-on: /namespaces/vault-operator-system/Deployment/vault-operator
   healthChecks:
     - apiVersion: vault.banzaicloud.com/v1alpha1
       kind: Vault

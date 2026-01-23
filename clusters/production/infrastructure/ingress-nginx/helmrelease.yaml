@@ -15,6 +15,13 @@ spec:
         name: ingress-nginx
         namespace: flux-system
       interval: 5m
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
   values:
     controller:
       # Configure for k3s environment with existing traefik

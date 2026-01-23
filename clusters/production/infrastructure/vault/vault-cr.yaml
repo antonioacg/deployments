@@ -1,6 +1,11 @@
 ---
 # Vault Custom Resource managed by Bank-Vaults Operator
-# Converted from infra/modules/vault/main.tf:34-177
+# Bank-Vaults Vault CR - manages Vault deployment, unsealing, and configuration
+#
+# NOTE: The Bank-Vaults operator automatically creates a 'vault-tls' Secret in the
+# vault namespace containing the CA certificate used by ClusterSecretStore.
+# This secret is created implicitly - see spec.config.listener.tls_cert_file/key_file.
+
 apiVersion: vault.banzaicloud.com/v1alpha1
 kind: Vault
 metadata:
@@ -8,6 +13,7 @@ metadata:
   namespace: vault
 spec:
   size: 1
+  storeRootToken: false
   image: hashicorp/vault:1.15.2
 
   # Use dedicated service account with RBAC for unseal keys
@@ -20,7 +26,6 @@ spec:
       secretName: vault-unseal-keys
     options:
       preFlightChecks: true
-      storeRootToken: true  # Store for bootstrap, revoke after
       secretShares: 5
       secretThreshold: 3
 
