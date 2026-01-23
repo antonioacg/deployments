@@ -14,7 +14,7 @@ spec:
     labels:
       app.kubernetes.io/part-of: infrastructure
     annotations:
-      config.kubernetes.io/depends-on: /namespaces/vault-operator-system/Deployment/vault-operator
+      config.kubernetes.io/depends-on: /namespaces/vault-operator/Deployment/vault-operator
   sourceRef:
     kind: GitRepository
     name: flux-system
