@@ -6,3 +6,5 @@ metadata:
   labels:
     app.kubernetes.io/name: vault-operator
     app.kubernetes.io/component: operator
+    managed-by: flux
+    tier: infrastructure

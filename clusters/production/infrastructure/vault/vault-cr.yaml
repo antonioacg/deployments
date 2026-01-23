@@ -65,6 +65,17 @@ spec:
 
     ui: true
 
+    audit:
+      - type: file
+        description: File audit device for Vault operations
+        options:
+          file_path: /vault/audit/vault-audit.log
+          mode: "0640"
+          # Vault native log rotation settings
+          rotation_max_files: 10
+          rotation_max_bytes: 104857600  # 100MB per file
+          rotation_duration: 24h
+
   # Automatic Vault configuration after initialization
   externalConfig:
     # Enable Kubernetes auth backend

@@ -10,6 +10,11 @@ spec:
   interval: 10m
   path: ./clusters/production/infrastructure/vault
   prune: true
+  commonMetadata:
+    labels:
+      app.kubernetes.io/part-of: infrastructure
+    annotations:
+      config.kubernetes.io/depends-on: /namespaces/vault-operator-system/Deployment/vault-operator
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -17,9 +22,6 @@ spec:
   timeout: 10m
   dependsOn:
     - name: vault-operator
-  commonMetadata:
-    annotations:
-      config.kubernetes.io/depends-on: /namespaces/vault-operator-system/Deployment/vault-operator
   healthChecks:
     - apiVersion: vault.banzaicloud.com/v1alpha1
       kind: Vault

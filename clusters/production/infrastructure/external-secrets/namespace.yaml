@@ -6,3 +6,5 @@ metadata:
   labels:
     app.kubernetes.io/name: external-secrets
     app.kubernetes.io/component: secrets-synchronization
+    managed-by: flux
+    tier: infrastructure

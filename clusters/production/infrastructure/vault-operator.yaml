@@ -10,6 +10,9 @@ spec:
   interval: 10m
   path: ./clusters/production/infrastructure/vault-operator
   prune: true
+  commonMetadata:
+    labels:
+      app.kubernetes.io/part-of: infrastructure
   sourceRef:
     kind: GitRepository
     name: flux-system

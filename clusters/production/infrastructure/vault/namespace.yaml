@@ -6,3 +6,5 @@ metadata:
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/component: secrets-management
+    managed-by: flux
+    tier: infrastructure
