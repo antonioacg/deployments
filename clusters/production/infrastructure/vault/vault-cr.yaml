@@ -58,7 +58,7 @@ spec:
       s3:
         endpoint: http://bootstrap-minio.bootstrap.svc.cluster.local:9000
         bucket: vault-storage
-        region: us-east-1  # MinIO requires region
+        region: local  # MinIO accepts any string; "local" is clearer than fake AWS region
         disable_ssl: "true"
         s3_force_path_style: "true"  # Required for MinIO
         # Credentials from vault-storage-credentials Secret via credentialsConfig
