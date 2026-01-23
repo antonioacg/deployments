@@ -129,10 +129,6 @@ spec:
   # Monitoring (enable in Phase 3)
   serviceMonitorEnabled: false
 
-  # ARM64 compatibility
-  nodeSelector:
-    kubernetes.io/arch: arm64
-
   tolerations:
     - key: node-role.kubernetes.io/control-plane
       operator: Exists

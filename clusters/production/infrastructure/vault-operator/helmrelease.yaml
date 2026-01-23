@@ -32,9 +32,6 @@ spec:
       limits:
         cpu: 500m
         memory: 256Mi
-    # ARM64 compatibility
-    nodeSelector:
-      kubernetes.io/arch: arm64
     tolerations:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists

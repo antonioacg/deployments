@@ -50,10 +50,6 @@ spec:
         vault.hashicorp.com/auth-path: auth/kubernetes
         vault.hashicorp.com/role: external-secrets
 
-    # ARM64 compatibility
-    nodeSelector:
-      kubernetes.io/arch: arm64
-
     tolerations:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
