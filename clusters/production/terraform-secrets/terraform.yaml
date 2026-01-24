@@ -6,10 +6,10 @@ metadata:
 spec:
   interval: 1h
   retryInterval: 5m
-  path: ./infra/modules/vault-secrets
+  path: ./modules/vault-secrets
   sourceRef:
     kind: GitRepository
-    name: flux-system
+    name: infra
   approvePlan: auto
   serviceAccountName: tf-controller-vault
 
