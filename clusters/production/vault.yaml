@@ -8,7 +8,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./clusters/production/infrastructure/vault
+  path: ./clusters/production/vault
   prune: true
   commonMetadata:
     labels:

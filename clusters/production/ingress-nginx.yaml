@@ -1,14 +1,14 @@
 ---
-# Flux Kustomization for Bank-Vaults Operator
-# First in dependency chain - no dependencies
+# Flux Kustomization for Nginx Ingress Controller
+# No dependencies - can be deployed in parallel
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: vault-operator
+  name: ingress-nginx
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./clusters/production/infrastructure/vault-operator
+  path: ./clusters/production/ingress-nginx
   prune: true
   commonMetadata:
     labels:
@@ -21,5 +21,5 @@ spec:
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment
-      name: vault-operator
-      namespace: vault-operator
+      name: ingress-nginx-controller
+      namespace: ingress-nginx

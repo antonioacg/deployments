@@ -30,13 +30,18 @@ All secrets flow: **Git (manifests)** → **Flux** → **Vault** → **External 
 ## Repository Structure
 
 ```
+apps/
+└── production/
+    └── stremio/             # Business applications
+
 clusters/production/
-├── flux-system/             # Flux controllers
-├── infrastructure/          # Platform services (Flux managed)
-│   ├── vault/              # Vault with Bank-Vaults operator
-│   ├── external-secrets/   # External Secrets Operator
-│   └── ingress/            # Ingress controllers
-└── applications/           # Business applications
+├── vault-operator/          # Bank-Vaults operator
+├── vault/                   # Vault with Bank-Vaults operator
+├── external-secrets/        # External Secrets Operator
+├── external-secrets-config/ # ClusterSecretStore config
+├── ingress-nginx/           # Ingress controller
+├── flux-secrets/            # Flux secrets via ESO
+└── pvc/                     # Persistent volume claims
 ```
 
 ## Making Changes
