@@ -22,3 +22,10 @@ spec:
       requests:
         cpu: 100m
         memory: 128Mi
+    # Disable pre-installed provider packages (require Flux OCIRepository v1)
+    awsPackage:
+      install: false
+    azurePackage:
+      install: false
+    gcpPackage:
+      install: false
