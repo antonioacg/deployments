@@ -13,6 +13,9 @@ resources:
   - vault.yaml
   - external-secrets.yaml
   - flux-secrets.yaml
+  - tf-controller.yaml
+  - terraform-secrets.yaml
+  - vault-jobs-rbac.yaml
   - ingress-nginx.yaml
   - pvc
 

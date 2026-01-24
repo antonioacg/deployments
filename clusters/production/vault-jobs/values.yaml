@@ -1,0 +1,7 @@
+secretName: ""
+secretValue: ""
+vault:
+  addr: "https://vault.vault.svc:8200"
+  role: "secret-writer"
+  path: "secret/bootstrap/inputs"
+image: hashicorp/vault:1.15

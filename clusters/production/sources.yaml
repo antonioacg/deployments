@@ -28,3 +28,14 @@ metadata:
 spec:
   interval: 5m
   url: https://kubernetes.github.io/ingress-nginx
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: tofu-controller
+  namespace: flux-system
+spec:
+  type: oci
+  url: oci://ghcr.io/flux-iac/charts
+  interval: 1h
+

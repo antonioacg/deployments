@@ -1,0 +1,4 @@
+apiVersion: v2
+name: vault-secret-writer
+version: 0.1.0
+description: One-shot job to write secrets to Vault

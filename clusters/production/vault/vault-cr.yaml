@@ -117,6 +117,22 @@ spec:
             policies:
               - external-secrets
             ttl: 1h
+          - name: secret-writer
+            bound_service_account_names:
+              - vault-secret-writer
+            bound_service_account_namespaces:
+              - vault-jobs
+            policies:
+              - secret-writer
+            ttl: 1h
+          - name: tf-controller
+            bound_service_account_names:
+              - tf-controller-vault
+            bound_service_account_namespaces:
+              - flux-system
+            policies:
+              - tf-controller
+            ttl: 1h
 
     # Policies for External Secrets
     policies:
@@ -127,6 +143,22 @@ spec:
           }
           path "secret/metadata/*" {
             capabilities = ["read", "list"]
+          }
+      - name: secret-writer
+        rules: |
+          path "secret/data/bootstrap/inputs" {
+            capabilities = ["create", "update", "patch"]
+          }
+      - name: tf-controller
+        rules: |
+          path "secret/data/bootstrap/inputs" {
+            capabilities = ["read"]
+          }
+          path "secret/data/infra/*" {
+            capabilities = ["create", "update", "read", "delete"]
+          }
+          path "secret/data/apps/*" {
+            capabilities = ["create", "update", "read", "delete"]
           }
 
     # Enable KV v2 secrets engine

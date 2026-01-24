@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-secret-writer-{{ randAlphaNum 5 | lower }}
+  namespace: vault-jobs
+spec:
+  ttlSecondsAfterFinished: 30
+  template:
+    spec:
+      serviceAccountName: vault-secret-writer
+      restartPolicy: Never
+      containers:
+        - name: writer
+          image: {{ .Values.image }}
+          env:
+            - name: VAULT_ADDR
+              value: {{ .Values.vault.addr | quote }}
+            - name: SECRET_NAME
+              value: {{ .Values.secretName | quote }}
+            - name: SECRET_VALUE
+              value: {{ .Values.secretValue | quote }}
+            - name: VAULT_PATH
+              value: {{ .Values.vault.path | quote }}
+            - name: VAULT_ROLE
+              value: {{ .Values.vault.role | quote }}
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              # Login to Vault
+              export VAULT_TOKEN=$(vault write -field=token auth/kubernetes/login \
+                role="$VAULT_ROLE" \
+                jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token))
+
+              # Check if path exists, merge if so
+              if vault kv get -format=json "$VAULT_PATH" >/dev/null 2>&1; then
+                # Path exists - use patch to add/update single key
+                vault kv patch "$VAULT_PATH" "$SECRET_NAME"="$SECRET_VALUE"
+              else
+                # Path doesn't exist - create it
+                vault kv put "$VAULT_PATH" "$SECRET_NAME"="$SECRET_VALUE"
+              fi

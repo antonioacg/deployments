@@ -1,0 +1,52 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: vault-secrets
+  namespace: flux-system
+spec:
+  interval: 1h
+  retryInterval: 5m
+  path: ./infra/modules/vault-secrets
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  approvePlan: auto
+  serviceAccountName: tf-controller-vault
+
+  # MinIO S3 backend
+  backendConfig:
+    customConfiguration: |
+      backend "s3" {
+        bucket                      = "terraform-state"
+        key                         = "vault-secrets/terraform.tfstate"
+        endpoint                    = "http://bootstrap-minio.bootstrap.svc:9000"
+        region                      = "us-east-1"
+        skip_credentials_validation = true
+        skip_metadata_api_check     = true
+        skip_region_validation      = true
+        force_path_style            = true
+      }
+
+  # MinIO credentials for S3 backend
+  # Source: vault-storage-credentials (created in Phase 2c of bootstrap)
+  runnerPodTemplate:
+    spec:
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: vault-storage-credentials
+              key: ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: vault-storage-credentials
+              key: SECRET_ACCESS_KEY
+
+  # Vault address from cluster-vars
+  vars:
+    - name: vault_addr
+      valueFrom:
+        configMapKeyRef:
+          name: cluster-vars
+          key: VAULT_ADDR
