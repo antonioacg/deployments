@@ -14,7 +14,7 @@ resources:
   - external-secrets.yaml
   - flux-secrets.yaml
   - ingress-nginx.yaml
-  - pvc
+  # - pvc  # TODO: Enable after apps are deployed (needs production namespace)
 
 # Global labels for all resources
 # NOTE: includeSelectors: false to avoid modifying immutable deployment selectors
