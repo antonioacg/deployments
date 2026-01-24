@@ -36,7 +36,6 @@ metadata:
     kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   size: 1
-  storeRootToken: false
   image: hashicorp/vault:1.15.2
 
   # Use dedicated service account with RBAC for unseal keys
@@ -51,6 +50,7 @@ spec:
       preFlightChecks: true
       secretShares: 5
       secretThreshold: 3
+      storeRootToken: false
 
   # S3 storage credentials from Secret (created by bootstrap script)
   # Use vaultEnvsConfig to set AWS credentials as environment variables in the vault container
