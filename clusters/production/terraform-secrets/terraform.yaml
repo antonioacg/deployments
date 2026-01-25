@@ -19,7 +19,7 @@ spec:
       backend "s3" {
         bucket                      = "terraform-state"
         key                         = "vault-secrets/terraform.tfstate"
-        endpoint                    = "http://bootstrap-minio.bootstrap.svc:9000"
+        endpoint                    = "http://minio.storage.svc:9000"
         region                      = "us-east-1"
         skip_credentials_validation = true
         skip_metadata_api_check     = true
@@ -27,21 +27,21 @@ spec:
         force_path_style            = true
       }
 
-  # MinIO credentials for S3 backend
-  # Source: vault-storage-credentials (created in Phase 2c of bootstrap)
+  # tf-controller's MinIO credentials (tf-user, terraform-state bucket only)
+  # Synced via ExternalSecret from Vault to flux-system namespace
   runnerPodTemplate:
     spec:
       env:
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
-              name: vault-storage-credentials
-              key: ACCESS_KEY_ID
+              name: tf-minio-credentials
+              key: access_key
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
-              name: vault-storage-credentials
-              key: SECRET_ACCESS_KEY
+              name: tf-minio-credentials
+              key: secret_key
 
   # Vault address from cluster-vars
   vars:

@@ -23,7 +23,7 @@ data:
   VAULT_NAMESPACE: vault
   VAULT_SERVICE: vault
 
-  # MinIO service endpoint (bootstrap storage)
-  MINIO_ENDPOINT: http://bootstrap-minio.bootstrap.svc.cluster.local:9000
-  MINIO_NAMESPACE: bootstrap
-  MINIO_SERVICE: bootstrap-minio
+  # MinIO service endpoint (storage namespace)
+  MINIO_ENDPOINT: http://minio.storage.svc.cluster.local:9000
+  MINIO_NAMESPACE: storage
+  MINIO_SERVICE: minio
