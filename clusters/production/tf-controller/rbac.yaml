@@ -1,5 +1,5 @@
 # RBAC for tf-controller-vault service account
-# Grants permission to read secrets (needed for terraform-runner TLS)
+# Grants permission to read secrets and configmaps (needed for terraform-runner and varsFrom)
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -8,7 +8,7 @@ metadata:
   namespace: flux-system
 rules:
   - apiGroups: [""]
-    resources: ["secrets"]
+    resources: ["secrets", "configmaps"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
