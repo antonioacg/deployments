@@ -28,19 +28,19 @@ spec:
       }
 
   # MinIO credentials for S3 backend
-  # Uses vault-storage-credentials (same as Vault) - see ISSUES.md for least-privilege tracking
+  # Uses tf-minio-credentials (tf-user with terraform-state bucket access only)
   runnerPodTemplate:
     spec:
       env:
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
-              name: vault-storage-credentials
+              name: tf-minio-credentials
               key: ACCESS_KEY_ID
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
-              name: vault-storage-credentials
+              name: tf-minio-credentials
               key: SECRET_ACCESS_KEY
 
   # Vault address from cluster-vars

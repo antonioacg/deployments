@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - helmrelease.yaml
   - serviceaccount.yaml
+  - tf-minio-externalsecret.yaml
