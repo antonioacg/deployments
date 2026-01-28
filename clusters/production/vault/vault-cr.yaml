@@ -146,7 +146,13 @@ spec:
           }
       - name: secret-writer
         rules: |
-          path "secret/data/bootstrap/inputs" {
+          path "secret/data/bootstrap/*" {
+            capabilities = ["create", "update", "patch"]
+          }
+          path "secret/data/infra/*" {
+            capabilities = ["create", "update", "patch"]
+          }
+          path "secret/data/flux/*" {
             capabilities = ["create", "update", "patch"]
           }
       - name: tf-controller
