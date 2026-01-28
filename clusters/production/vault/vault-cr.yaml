@@ -157,6 +157,10 @@ spec:
           }
       - name: tf-controller
         rules: |
+          # Token creation required by Vault Terraform provider
+          path "auth/token/create" {
+            capabilities = ["create", "update"]
+          }
           path "secret/data/bootstrap/inputs" {
             capabilities = ["read"]
           }
