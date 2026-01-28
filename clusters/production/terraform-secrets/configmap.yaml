@@ -1,0 +1,9 @@
+# Terraform variables ConfigMap
+# Uses lowercase keys to match Terraform variable names
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terraform-vars
+  namespace: flux-system
+data:
+  vault_addr: "https://vault.vault.svc.cluster.local:8200"
