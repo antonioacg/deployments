@@ -4,5 +4,6 @@ resources:
   - helmrelease.yaml
   - serviceaccount.yaml
   - rbac.yaml
+  - externalsecrets-role.yaml
   - tf-minio-externalsecret.yaml
   - externalsecrets-rolebinding.yaml
