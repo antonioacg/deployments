@@ -5,3 +5,4 @@ resources:
   - serviceaccount.yaml
   - rbac.yaml
   - tf-minio-externalsecret.yaml
+  - externalsecrets-rolebinding.yaml
